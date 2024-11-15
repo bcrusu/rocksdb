@@ -156,12 +156,8 @@ class DBIter final : public Iterator {
   }
   Slice key() const override {
     assert(valid_);
-    if (timestamp_lb_) {
-      return saved_key_.GetInternalKey();
-    } else {
-      const Slice ukey_and_ts = saved_key_.GetUserKey();
-      return Slice(ukey_and_ts.data(), ukey_and_ts.size() - timestamp_size_);
-    }
+    const Slice ukey_and_ts = saved_key_.GetUserKey();
+    return Slice(ukey_and_ts.data(), ukey_and_ts.size() - timestamp_size_);
   }
   Slice value() const override {
     assert(valid_);
