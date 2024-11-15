@@ -466,6 +466,12 @@ extern ROCKSDB_LIBRARY_API void rocksdb_delete_cf(
     rocksdb_column_family_handle_t* column_family, const char* key,
     size_t keylen, char** errptr);
 
+extern ROCKSDB_LIBRARY_API void rocksdb_delete_range(
+    rocksdb_t* db, const rocksdb_writeoptions_t* options,
+    const char* start_key, size_t start_key_len,
+    const char* end_key, size_t end_key_len,
+    char** errptr);
+
 extern ROCKSDB_LIBRARY_API void rocksdb_delete_range_cf(
     rocksdb_t* db, const rocksdb_writeoptions_t* options,
     rocksdb_column_family_handle_t* column_family, const char* start_key,
@@ -809,6 +815,10 @@ extern ROCKSDB_LIBRARY_API void rocksdb_writebatch_merge(rocksdb_writebatch_t*,
 extern ROCKSDB_LIBRARY_API void rocksdb_writebatch_merge_cf(
     rocksdb_writebatch_t*, rocksdb_column_family_handle_t* column_family,
     const char* key, size_t klen, const char* val, size_t vlen);
+extern ROCKSDB_LIBRARY_API void rocksdb_writebatch_merge_cf_with_ts(
+    rocksdb_writebatch_t*, rocksdb_column_family_handle_t* column_family,
+    const char* key, size_t klen, const char* ts, size_t tslen, const char* val,
+    size_t vlen);
 extern ROCKSDB_LIBRARY_API void rocksdb_writebatch_mergev(
     rocksdb_writebatch_t* b, int num_keys, const char* const* keys_list,
     const size_t* keys_list_sizes, int num_values,
@@ -2034,6 +2044,11 @@ extern ROCKSDB_LIBRARY_API void rocksdb_readoptions_set_total_order_seek(
     rocksdb_readoptions_t*, unsigned char);
 extern ROCKSDB_LIBRARY_API unsigned char
 rocksdb_readoptions_get_total_order_seek(rocksdb_readoptions_t*);
+extern ROCKSDB_LIBRARY_API unsigned char
+rocksdb_readoptions_get_auto_prefix_mode(rocksdb_readoptions_t*);
+extern ROCKSDB_LIBRARY_API void rocksdb_readoptions_set_auto_prefix_mode(
+    rocksdb_readoptions_t*, unsigned char);
+
 extern ROCKSDB_LIBRARY_API void
 rocksdb_readoptions_set_max_skippable_internal_keys(rocksdb_readoptions_t*,
                                                     uint64_t);
@@ -2376,6 +2391,8 @@ rocksdb_slicetransform_create(
     const char* (*name)(void*));
 extern ROCKSDB_LIBRARY_API rocksdb_slicetransform_t*
     rocksdb_slicetransform_create_fixed_prefix(size_t);
+extern ROCKSDB_LIBRARY_API rocksdb_slicetransform_t*
+    rocksdb_slicetransform_create_capped_prefix(size_t);
 extern ROCKSDB_LIBRARY_API rocksdb_slicetransform_t*
 rocksdb_slicetransform_create_noop(void);
 extern ROCKSDB_LIBRARY_API void rocksdb_slicetransform_destroy(

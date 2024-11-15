@@ -1313,6 +1313,16 @@ char* rocksdb_get_full_history_ts_low(
   return result;
 }
 
+void rocksdb_delete_range(rocksdb_t* db,
+                          const rocksdb_writeoptions_t* options,
+                          const char* start_key, size_t start_key_len,
+                          const char* end_key, size_t end_key_len,
+                          char** errptr) {
+  SaveError(errptr, db->rep->DeleteRange(options->rep,
+                                         Slice(start_key, start_key_len),
+                                         Slice(end_key, end_key_len)));
+}
+
 void rocksdb_delete_range_cf(rocksdb_t* db,
                              const rocksdb_writeoptions_t* options,
                              rocksdb_column_family_handle_t* column_family,
@@ -2130,6 +2140,14 @@ void rocksdb_writebatch_merge_cf(rocksdb_writebatch_t* b,
                                  const char* key, size_t klen, const char* val,
                                  size_t vlen) {
   b->rep.Merge(column_family->rep, Slice(key, klen), Slice(val, vlen));
+}
+
+void rocksdb_writebatch_merge_cf_with_ts(
+    rocksdb_writebatch_t* b, rocksdb_column_family_handle_t* column_family,
+    const char* key, size_t klen, const char* ts, size_t tslen, const char* val,
+    size_t vlen) {
+  b->rep.Merge(column_family->rep, Slice(key, klen), Slice(ts, tslen),
+             Slice(val, vlen));
 }
 
 void rocksdb_writebatch_mergev(rocksdb_writebatch_t* b, int num_keys,
@@ -4803,6 +4821,16 @@ unsigned char rocksdb_readoptions_get_total_order_seek(
   return opt->rep.total_order_seek;
 }
 
+void rocksdb_readoptions_set_auto_prefix_mode(rocksdb_readoptions_t* opt,
+                                              unsigned char v) {
+  opt->rep.auto_prefix_mode = v;
+}
+
+unsigned char rocksdb_readoptions_get_auto_prefix_mode(
+    rocksdb_readoptions_t* opt) {
+  return opt->rep.auto_prefix_mode;
+}
+
 void rocksdb_readoptions_set_max_skippable_internal_keys(
     rocksdb_readoptions_t* opt, uint64_t v) {
   opt->rep.max_skippable_internal_keys = v;
@@ -5506,6 +5534,15 @@ rocksdb_slicetransform_t* rocksdb_slicetransform_create_fixed_prefix(
     size_t prefixLen) {
   SliceTransformWrapper* wrapper = new SliceTransformWrapper;
   wrapper->rep_ = ROCKSDB_NAMESPACE::NewFixedPrefixTransform(prefixLen);
+  wrapper->state_ = nullptr;
+  wrapper->destructor_ = &SliceTransformWrapper::DoNothing;
+  return wrapper;
+}
+
+rocksdb_slicetransform_t* rocksdb_slicetransform_create_capped_prefix(
+    size_t cap_len) {
+  SliceTransformWrapper* wrapper = new SliceTransformWrapper;
+  wrapper->rep_ = ROCKSDB_NAMESPACE::NewCappedPrefixTransform(cap_len);
   wrapper->state_ = nullptr;
   wrapper->destructor_ = &SliceTransformWrapper::DoNothing;
   return wrapper;
